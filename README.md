@@ -5,7 +5,7 @@ It currently only supports notification via Slack channels.
 Usage
 =====
 
-To start the monitoring agent type:
+You must be running a consul agent listening to localhost:8500. To start the monitoring agent type:
 
 ```shell
 consul-pager start -config config.yaml
@@ -37,3 +37,11 @@ You can easily add checks with:
 ```shell
 consul-alert addcheck -name a_check_name -interval 10s -script "ping -c 1 localhost"
 ```
+
+If you need redundancy just run consul-pager in more nodes. Consul-pager will select a random leader from all the available candidates.
+
+Install
+=======
+
+Just download and run executables at https://github.com/jmcarbo/consul-pager/releases
+

@@ -115,6 +115,28 @@ func main() {
 				}
 			},
 		},
+		{
+			Name:      "loadchecks",
+			ShortName: "l",
+			Usage:     "load checks from yaml",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "file",
+					Value: "",
+					Usage: "yaml file",
+				},
+			},
+			Action: func(c *cli.Context) {
+				if c.String("file") == "" {
+					fmt.Print("Must supply yaml file")
+				}
+				client := cp.Connect()
+				err := cp.LoadChecksFromYAML(c.String("file"), client)
+				if err != nil {
+					fmt.Print(err)
+				}
+			},
+		},
 	}
 	app.Run(os.Args)
 }
