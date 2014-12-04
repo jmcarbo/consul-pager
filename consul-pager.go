@@ -27,6 +27,7 @@ type ConsulPager struct {
 	kvlock          *apixtra.Lock
 	Channels        map[string]Channel
 	DefaultMaturity string
+	Events          map[string]*consulapi.UserEvent
 }
 
 func NewConsulPager(client *consulapi.Client) *ConsulPager {
@@ -37,6 +38,7 @@ func NewConsulPager(client *consulapi.Client) *ConsulPager {
 	}
 	cp.alerts = make(map[string]*Alert, 10)
 	cp.Channels = make(map[string]Channel, 10)
+	cp.Events = make(map[string]*consulapi.UserEvent, 10)
 	cp.DefaultMaturity = "3s"
 	return cp
 }
@@ -53,6 +55,7 @@ func LoadPagerFromYAML(fileName string, client *consulapi.Client) *ConsulPager {
 		return nil
 	}
 	cp.alerts = make(map[string]*Alert, 10)
+	cp.Events = make(map[string]*consulapi.UserEvent, 10)
 	cp.client = client
 	if cp.DefaultMaturity == "" {
 		cp.DefaultMaturity = "3s"
@@ -68,7 +71,12 @@ func (cp *ConsulPager) IsStopped() bool {
 }
 
 func (cp *ConsulPager) IsLeader() bool {
-	return cp.kvlock.IsLocked() == nil
+	err := cp.kvlock.IsLocked()
+	if err != nil {
+		log.Error(err)
+		return false
+	}
+	return true
 }
 
 func (cp *ConsulPager) HasAlert(id string) bool {
@@ -131,9 +139,38 @@ func (cp *ConsulPager) SetAlertSeverity(id string, severity string) error {
 func (cp *ConsulPager) Run() error {
 	err := cp.kvlock.Lock(nil)
 	if err != nil {
+		log.Error(err)
 		return err
 	}
 
+	// Notify events
+	go func() {
+		var modi uint64
+		modi = 0
+		dur, _ := time.ParseDuration("3s")
+		for {
+			uevents, qm, err := cp.client.Event().List("", &consulapi.QueryOptions{WaitTime: dur, WaitIndex: modi})
+			if err != nil {
+				return
+			}
+
+			for _, a := range uevents {
+				_, ok := cp.Events[a.ID]
+				if ok {
+				} else {
+					log.Infof("%#v", a)
+					cp.Events[a.ID] = a
+				}
+			}
+
+			modi = qm.LastIndex
+			if !cp.kvlock.IsLeader() {
+				return
+			}
+		}
+	}()
+
+	// Notify alerts
 	go func() {
 		var modi uint64
 		modi = 0
