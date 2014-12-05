@@ -33,13 +33,13 @@ func TestConsulPager(t *testing.T) {
 		})
 
 		g.It("can be instantiated", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			cp := NewConsulPager(client)
 			g.Assert(cp.IsStopped()).IsTrue()
 		})
 
 		g.It("can be run and stopped", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			cp := NewConsulPager(client)
 			cp.Run()
 			time.Sleep(time.Second * 2)
@@ -50,7 +50,7 @@ func TestConsulPager(t *testing.T) {
 		})
 
 		g.It("creates alert on failed check", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			client.Agent().CheckRegister(&consulapi.AgentCheckRegistration{"ACheck", "Acheck", "",
 				consulapi.AgentServiceCheck{Interval: "2s", Script: "ping -c 1 loc"}})
 			cp := NewConsulPager(client)
@@ -62,7 +62,7 @@ func TestConsulPager(t *testing.T) {
 		})
 
 		g.It("creates alert and matures on failed check", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			client.Agent().CheckRegister(&consulapi.AgentCheckRegistration{"ACheck", "Acheck", "",
 				consulapi.AgentServiceCheck{Interval: "2s", Script: "ping -c 1 loc"}})
 			cp := NewConsulPager(client)
@@ -75,7 +75,7 @@ func TestConsulPager(t *testing.T) {
 		})
 
 		g.It("creates alert and matures on failed check and sends alert to channel", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			client.Agent().CheckRegister(&consulapi.AgentCheckRegistration{"ACheck", "Acheck", "",
 				consulapi.AgentServiceCheck{Interval: "2s", Script: "ping -c 1 loc"}})
 			cp := NewConsulPager(client)
@@ -92,7 +92,7 @@ func TestConsulPager(t *testing.T) {
 		})
 
 		g.It("It can be save to YAML", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			client.Agent().CheckRegister(&consulapi.AgentCheckRegistration{"ACheck", "Acheck", "",
 				consulapi.AgentServiceCheck{Interval: "2s", Script: "ping -c 1 loc"}})
 			cp := NewConsulPager(client)
@@ -106,7 +106,7 @@ func TestConsulPager(t *testing.T) {
 		})
 
 		g.It("It can loaded from YAML", func() {
-			client := Connect()
+			client := Connect("", "", "")
 			cp := LoadPagerFromYAML("backup.yaml", client)
 			g.Assert(cp != nil).IsTrue()
 		})

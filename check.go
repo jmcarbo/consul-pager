@@ -25,7 +25,6 @@ func LoadChecksFromYAML(fileName string, client *consulapi.Client) error {
 		if c.Name == "" || c.Interval == "" || c.Script == "" {
 			errors.New("Needs name, interval and script")
 		} else {
-			client := Connect()
 			client.Agent().CheckRegister(&consulapi.AgentCheckRegistration{c.Name, c.Name, "",
 				consulapi.AgentServiceCheck{Interval: c.Interval, Script: c.Script}})
 		}

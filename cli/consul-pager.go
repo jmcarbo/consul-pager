@@ -11,8 +11,7 @@ import (
 	"time"
 )
 
-func addCheck(name, interval, script string) {
-	client := cp.Connect()
+func addCheck(name, interval, script string, client *consulapi.Client) {
 	client.Agent().CheckRegister(&consulapi.AgentCheckRegistration{name, name, "",
 		consulapi.AgentServiceCheck{Interval: interval, Script: script}})
 }
@@ -21,7 +20,24 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "consul-pager"
 	app.Usage = "consul alarms on check failures!"
-	app.Version = "0.0.1"
+	app.Version = "0.0.2"
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "address",
+			Value: "127.0.0.1:8500",
+			Usage: "consul address",
+		},
+		cli.StringFlag{
+			Name:  "dc",
+			Value: "",
+			Usage: "consul datacenter",
+		},
+		cli.StringFlag{
+			Name:  "token",
+			Value: "",
+			Usage: "consul token",
+		},
+	}
 	app.Commands = []cli.Command{
 		{
 			Name:      "version",
@@ -46,7 +62,7 @@ func main() {
 				if c.String("config") == "" {
 					fmt.Print("Must supply config file")
 				}
-				client := cp.Connect()
+				client := cp.Connect(c.GlobalString("address"), c.GlobalString("datacenter"), c.GlobalString("token"))
 				watcher := cp.LoadPagerFromYAML(c.String("config"), client)
 				if watcher != nil {
 					log.Printf("Starting pager watcher ...\n")
@@ -111,7 +127,8 @@ func main() {
 				if c.String("name") == "" || c.String("interval") == "" || c.String("script") == "" {
 					fmt.Printf("Needs name, interval and script\n")
 				} else {
-					addCheck(c.String("name"), c.String("interval"), c.String("script"))
+					client := cp.Connect(c.GlobalString("address"), c.GlobalString("datacenter"), c.GlobalString("token"))
+					addCheck(c.String("name"), c.String("interval"), c.String("script"), client)
 				}
 			},
 		},
@@ -130,7 +147,7 @@ func main() {
 				if c.String("file") == "" {
 					fmt.Print("Must supply yaml file")
 				}
-				client := cp.Connect()
+				client := cp.Connect(c.GlobalString("address"), c.GlobalString("datacenter"), c.GlobalString("token"))
 				err := cp.LoadChecksFromYAML(c.String("file"), client)
 				if err != nil {
 					fmt.Print(err)

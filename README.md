@@ -8,7 +8,12 @@ Usage
 You must be running a consul agent listening to localhost:8500. To start the monitoring agent type:
 
 ```shell
-consul-pager start -config config.yaml
+consul-pager <global options> start -config config.yaml
+
+GLOBAL OPTIONS:
+   --address '127.0.0.1:8500'	consul address
+   --dc 			consul datacenter
+   --token 			consul token
 ```
 
 The configuration file should look like:
